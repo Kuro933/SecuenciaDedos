@@ -31,7 +31,7 @@ pTime = 0
  
 detector = htm.handDetector(detectionCon=0.90)
 start_time = time.time()
-
+tiempo_restante = 15
 
 def Mbox(title, text, style):
     return ctypes.windll.user32.MessageBoxW(0, text, title, style)
@@ -66,6 +66,7 @@ while termino:
         # cv2.imshow("Derrota", bad_img)
         reinicio = True
         derrota = False
+        tiempo_restante = 15
         numero_intento += 1
         Mbox('Derrota', f'Quedan {3 - numero_intento} intentos', 0)
         
@@ -121,9 +122,8 @@ while termino:
         img[0:h, 0:w] = overlayList[totalFingers - 1]
 
  
-        cv2.rectangle(img, (20, 225), (170, 425), (0, 255, 0), cv2.FILLED)
-        cv2.putText(img, str(totalFingers), (45, 375), cv2.FONT_HERSHEY_PLAIN,
-                    10, (255, 0, 0), 25)
+        #cv2.rectangle(img, (20, 225), (170, 425), (0, 255, 0), cv2.FILLED)
+        #cv2.putText(img, str(totalFingers), (45, 375), cv2.FONT_HERSHEY_PLAIN,10, (255, 0, 0), 25)
  
     cTime = time.time()
     fps = 1 / (cTime - pTime)
@@ -134,8 +134,8 @@ while termino:
         cv2.putText(img, f'{str(num)}', (x_secuencia,y_secuencia), cv2.FONT_HERSHEY_PLAIN,3,(255,0,0),3)
         x_secuencia += 40
 
- 
-    # cv2.putText(img, f'FPS: {int(fps)}', (400, 70), cv2.FONT_HERSHEY_PLAIN,3, (255, 0, 0), 3)
+    
+    cv2.putText(img, f'Tiempo restante: {int(tiempo_restante - elapsed_time)}', (20, 450), cv2.FONT_HERSHEY_PLAIN,3, (255, 0, 0), 3)
  
     cv2.imshow("Image", img)
     cv2.waitKey(1)
