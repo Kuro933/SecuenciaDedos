@@ -25,13 +25,13 @@ wCam, hCam = 1366, 720
 cap.set(3, wCam)
 cap.set(4, hCam)
 tiempo_de_juego = 10
+numero_participante = 1
 k=0 
 reinicio = False
 derrota = True
 folderPath = "FingerImages"
 sorteito = "sorteo"
 imagePath = r'C:\\Users\\gonzalezf\\Desktop\\git\\fiestaconfluencia\\SecuenciaDedos\\fingerDetected\\image'
-
 myList = os.listdir(folderPath)
 overlayList = []
 for imPath in myList:
@@ -72,7 +72,8 @@ while termino:
         Mbox("Derrota", "Lo siento se terminaron los intentos", 0)
         numero_intento=0
         inicio = True
-        guardar = True
+        numero_participante +=1
+
         # termino = False
         # cv2.destroyAllWindows()
     
@@ -120,9 +121,12 @@ while termino:
         else:
             print("victoria")
             ok_img = cv2.imread(f'{imagePath}/victoria.jpg')
+            cv2.putText(img, f'Nombre: {str(nombre)}', (int(width*0.5), int(height*0.80)), cv2.FONT_HERSHEY_PLAIN,3, (255, 0, 0), 3)
+            cv2.putText(img, f'Telefono: {str(numero_telefono)}', (int(width*0.5), int(height*0.90)), cv2.FONT_HERSHEY_PLAIN,3, (255, 0, 0), 3)
+            cv2.imwrite(f'{sorteito}/{numero_participante}.jpg',img)
+            numero_participante +=1
             reinicio = True
             inicio = True
-            guardar = True
             numero_intento = 0
             Mbox('Victoria', 'Victoria!!', 0)
             
@@ -143,12 +147,7 @@ while termino:
     width  = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
     height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
-    if guardar:
-        if ((int)(tiempo_restante - elapsed_time)) == 5:
-            cv2.putText(img, f'Nombre: {str(nombre)}', (int(width*0.5), int(height*0.80)), cv2.FONT_HERSHEY_PLAIN,3, (255, 0, 0), 3)
-            cv2.putText(img, f'Telefono: {str(numero_telefono)}', (int(width*0.5), int(height*0.90)), cv2.FONT_HERSHEY_PLAIN,3, (255, 0, 0), 3)
-            cv2.imwrite(f'{sorteito}/{nombre}.jpg',img)
-            guardar = False
+
 
 
     for num in secuencia:
