@@ -1,7 +1,7 @@
 import cv2
 import time
 import os
-import pyaudio
+# import pyaudio
 import wave
 import ctypes
 import DetectarMano as htm
@@ -16,6 +16,7 @@ from _tkinter import TclError
 ws = Tk()
 ws.withdraw()
 nombre = ""
+manoHabil = ""
 numero_telefono = ""
 termino = True
 inicio = True
@@ -80,7 +81,7 @@ while termino:
             print("Tu nombre es: ", nombre)
             print("Tu telefono es: ", numero_telefono)
             inicio = False
-
+            manoHabil = simpledialog.askstring("Input", "Mano Habil", parent=ws).lower()
 
     if numero_intento != 3:
         if reinicio:
@@ -111,22 +112,35 @@ while termino:
         tiempo_restante = tiempo_de_juego
         numero_intento += 1
         Mensaje('Derrota', f'Quedan {3 - numero_intento} intentos, proximo en 5 segundos', 5)
+
         
     if len(lmList) != 0:
         fingers = []
- 
-        if lmList[tipIds[0]][1] > lmList[tipIds[0] - 1][1]:
-            fingers.append(1)
-        else:
-            fingers.append(0)
-     
-        # 4 dedos
-        for id in range(1, 5):
-            if lmList[tipIds[id]][2] < lmList[tipIds[id] - 2][2]:
+
+        if manoHabil == "izquierda" or manoHabil == "zurda" or manoHabil == "izquierdo" or manoHabil == "zurdo" or manoHabil == "izq":
+            if lmList[tipIds[0]][1] < lmList[tipIds[0] - 1][1]:
                 fingers.append(1)
             else:
                 fingers.append(0)
- 
+        
+            # 4 dedos
+            for id in range(1, 5):
+                if lmList[tipIds[id]][2] < lmList[tipIds[id] - 2][2]:
+                    fingers.append(1)
+                else:
+                    fingers.append(0)
+        else:
+            if lmList[tipIds[0]][1] > lmList[tipIds[0] - 1][1]:
+                fingers.append(1)
+            else:
+                fingers.append(0)
+     
+        # 4 dedos
+            for id in range(1, 5):
+                if lmList[tipIds[id]][2] < lmList[tipIds[id] - 2][2]:
+                    fingers.append(1)
+                else:
+                    fingers.append(0)
         # print(fingers)
         totalFingers = fingers.count(1)
         

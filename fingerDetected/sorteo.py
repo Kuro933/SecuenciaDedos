@@ -5,7 +5,7 @@ import wave
 import ctypes
 import random
 
-cantidad_ganadores = 12
+cantidad_ganadores = 3
 tiempo_de_sorteo = 10
 terminar = True
 ganador = False
@@ -30,7 +30,7 @@ def Mbox(title, text, style):
     return ctypes.windll.user32.MessageBoxW(0, text, title, style)
 
 
-while terminar and (len(numeros_ganadores) < 3):
+while terminar and (len(numeros_ganadores) < cantidad_ganadores):
     
     elapsed_time = time.time() - start_time
 
