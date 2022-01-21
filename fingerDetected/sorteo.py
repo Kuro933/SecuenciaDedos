@@ -16,7 +16,7 @@ cantidad_fotos = 0
 miLista = os.listdir(sorteoPath)
 overlayList = []
 for imgPath in miLista:
-    print(imgPath)
+    # print(imgPath)
     image = cv2.imread(f'{sorteoPath}/{imgPath}')
     overlayList.append(image)
     cantidad_fotos += 1
@@ -34,11 +34,18 @@ while terminar and (len(numeros_ganadores) < 3):
     
     elapsed_time = time.time() - start_time
 
-
     if ((int)(tiempo_de_sorteo - elapsed_time)) == 0:
         if(rnd not in numeros_ganadores):
             numeros_ganadores.append(rnd)
-        cv2.imwrite(f'{ganadorPath}/{rnd}.jpg',img)
+            height, width, channels = img.shape
+            cv2.putText(img, f'Puesto: {len(numeros_ganadores)}', (int(width*0.05), int(height*0.90)), cv2.FONT_HERSHEY_PLAIN,3, (255, 0, 0), 3)
+        if (len(numeros_ganadores) == 1):
+            etiquieta = "Primer Puesto"
+        elif (len(numeros_ganadores) == 2):
+            etiquieta = "Segundo Puesto"
+        else:
+            etiquieta = "Tercer Puesto"
+        cv2.imwrite(f'{ganadorPath}/{etiquieta}.jpg',img)
         tiempo_de_sorteo = 10
         
 
