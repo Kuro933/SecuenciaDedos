@@ -1,7 +1,7 @@
 import cv2
 import time
 import os
-# import pyaudio
+import pyaudio
 import wave
 import ctypes
 import DetectarMano as htm

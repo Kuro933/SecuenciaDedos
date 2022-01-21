@@ -1,1 +1,1 @@
-C:/Python39/python.exe contardedos.py
+C:/Users/gonzalezf/Desktop/git/fiestaconfluencia/SecuenciaDedos/fingerDetected/venv/Scripts/python.exe contarDedos.py
