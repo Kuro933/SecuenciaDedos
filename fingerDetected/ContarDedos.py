@@ -8,9 +8,13 @@ import DetectarMano as htm
 import secuencia as s
 from tkinter import *
 from tkinter import simpledialog
+from tkinter import Tk
+from tkinter.messagebox import Message 
+from _tkinter import TclError
+
 
 ws = Tk()
-ws.title("ManoSecuencia")
+ws.withdraw()
 nombre = ""
 numero_telefono = ""
 termino = True
@@ -25,7 +29,15 @@ wCam, hCam = 1366, 720
 cap.set(3, wCam)
 cap.set(4, hCam)
 tiempo_de_juego = 10
-numero_participante = 1
+try:
+    data = open("participantes.txt")
+    for dato in data:
+        numero_participante = int(dato)
+    
+    data.close()
+except IOError:
+    print("no se pudo")
+
 k=0 
 reinicio = False
 derrota = True
@@ -48,6 +60,15 @@ tiempo_restante = tiempo_de_juego
 def Mbox(title, text, style):
     return ctypes.windll.user32.MessageBoxW(0, text, title, style)
 
+def Mensaje(title, text, time):
+    root = Tk()
+    root.withdraw()
+    try:
+        root.after((time*1000), root.destroy) 
+        Message(title=title, message=text, master=root).show()
+    except TclError:
+        pass
+
 tipIds = [4, 8, 12, 16, 20]
 e = 0
 while termino:
@@ -69,17 +90,16 @@ while termino:
             reinicio = False
             k = 0
     else:
-        Mbox("Derrota", "Lo siento se terminaron los intentos", 0)
+        Mensaje("Derrota", "Lo siento se terminaron los intentos", 5)
         numero_intento=0
         inicio = True
-        numero_participante +=1
-
         # termino = False
         # cv2.destroyAllWindows()
     
     
     elapsed_time = time.time() - start_time
     success, img = cap.read()
+    succ, img_temp = cap.read()
     img = detector.findHands(img)
     lmList = detector.findPosition(img, draw=False)
     x_secuencia = 125
@@ -90,7 +110,7 @@ while termino:
         derrota = False
         tiempo_restante = tiempo_de_juego
         numero_intento += 1
-        Mbox('Derrota', f'Quedan {3 - numero_intento} intentos', 0)
+        Mensaje('Derrota', f'Quedan {3 - numero_intento} intentos, proximo en 5 segundos', 5)
         
     if len(lmList) != 0:
         fingers = []
@@ -110,7 +130,6 @@ while termino:
         # print(fingers)
         totalFingers = fingers.count(1)
         
-      
         longitud = len(secuencia)
         if k < longitud:            
             if (totalFingers) == secuencia[k]:
@@ -121,24 +140,24 @@ while termino:
         else:
             print("victoria")
             ok_img = cv2.imread(f'{imagePath}/victoria.jpg')
-            cv2.putText(img, f'Nombre: {str(nombre)}', (int(width*0.5), int(height*0.80)), cv2.FONT_HERSHEY_PLAIN,3, (255, 0, 0), 3)
-            cv2.putText(img, f'Telefono: {str(numero_telefono)}', (int(width*0.5), int(height*0.90)), cv2.FONT_HERSHEY_PLAIN,3, (255, 0, 0), 3)
-            cv2.imwrite(f'{sorteito}/{numero_participante}.jpg',img)
+            Mensaje('Victoria', 'Victoria!!', 5)
+
+            cv2.putText(img_temp, f'Nombre: {str(nombre)}', (int(width*0.5), int(height*0.80)), cv2.FONT_HERSHEY_PLAIN,3, (255, 0, 0), 3)
+            cv2.putText(img_temp, f'Telefono: {str(numero_telefono)}', (int(width*0.5), int(height*0.90)), cv2.FONT_HERSHEY_PLAIN,3, (255, 0, 0), 3)
+            cv2.imwrite(f'{sorteito}/{numero_participante}.jpg',img_temp)
             numero_participante +=1
             reinicio = True
             inicio = True
             numero_intento = 0
-            Mbox('Victoria', 'Victoria!!', 0)
-            
-
-            
+            try:
+                participante_file = open("participantes.txt",'w')
+                print(numero_participante,file=participante_file)
+                participante_file.close()
+            except IOError:
+                print("File error")
             
         h, w, c = overlayList[totalFingers - 1].shape
         img[0:h, 0:w] = overlayList[totalFingers - 1]
-
- 
-        #cv2.rectangle(img, (20, 225), (170, 425), (0, 255, 0), cv2.FILLED)
-        #cv2.putText(img, str(totalFingers), (45, 375), cv2.FONT_HERSHEY_PLAIN,10, (255, 0, 0), 25)
  
     cTime = time.time()
     fps = 1 / (cTime - pTime)
@@ -147,16 +166,11 @@ while termino:
     width  = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
     height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
-
-
-
     for num in secuencia:
         cv2.putText(img, f'{str(num)}', (x_secuencia,y_secuencia), cv2.FONT_HERSHEY_PLAIN,3,(255,0,0),3)
         x_secuencia += 40
 
-
-    cv2.putText(img, f'Tiempo restante: {int(tiempo_restante - elapsed_time)}', (int(width*0.05), int(height*0.90)), cv2.FONT_HERSHEY_PLAIN,3, (255, 0, 0), 3)
-    
+    cv2.putText(img, f'Tiempo restante: {int(tiempo_restante - elapsed_time)}', (int(width*0.05), int(height*0.90)), cv2.FONT_HERSHEY_PLAIN,3, (255, 0, 0), 3)    
 
     cv2.imshow("Image", img)
     cv2.waitKey(1)
