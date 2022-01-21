@@ -8,6 +8,7 @@ import DetectarMano as htm
 import secuencia as s
 from tkinter import *
 from tkinter import simpledialog
+from tkinter.messagebox import askyesno
 from tkinter import Tk
 from tkinter.messagebox import Message 
 from _tkinter import TclError
@@ -20,6 +21,7 @@ manoHabil = ""
 numero_telefono = ""
 termino = True
 inicio = True
+primerEjecucion = True
 guardar = True
 secuencia = s.secuencia()
 numero_intento = 0
@@ -74,12 +76,28 @@ tipIds = [4, 8, 12, 16, 20]
 e = 0
 while termino:
 
+    if primerEjecucion:
+        preguntaParticipantes = Tk()
+        preguntaParticipantes.withdraw()
+        respuesta = askyesno(title='Pregunta', message='Reiniciar numero de participantes?')
+        if respuesta:
+            print("si")
+            numero_participante = 1
+            try:
+                parti_file = open("participantes.txt",'w')
+                print(numero_participante,file=parti_file)
+                parti_file.close()
+            except IOError:
+                print("File error")
+            
+        primerEjecucion = False
+
     if inicio:
         nombre = simpledialog.askstring("Input", "Nombre",parent=ws)
         if nombre is not None:
             numero_telefono = simpledialog.askstring("Input", "Número de telefono",parent=ws)
-            print("Tu nombre es: ", nombre)
-            print("Tu telefono es: ", numero_telefono)
+            # print("Tu nombre es: ", nombre)
+            # print("Tu telefono es: ", numero_telefono)
             inicio = False
             manoHabil = simpledialog.askstring("Input", "Mano Habil", parent=ws).lower()
 
@@ -94,9 +112,6 @@ while termino:
         Mensaje("Derrota", "Lo siento se terminaron los intentos", 5)
         numero_intento=0
         inicio = True
-        # termino = False
-        # cv2.destroyAllWindows()
-    
     
     elapsed_time = time.time() - start_time
     success, img = cap.read()
