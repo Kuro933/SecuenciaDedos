@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<body>
+  <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+  <script src="https://unpkg.com/htmx.org@1.6.1"></script>
+  <div class="container">
+      <div class="row">
+        <div class="col-lg-8  offset-lg-2">
+            <div id="nombre-container" class="nombre-container">
+                <input type="text" id="nombre" class="nombre" placeholder="nombre" /> </div>
+              <div id="logo" class="logo mt-5">Video en vivo :D</div>
+              <input type="text" id="datos" class="datos" src="{{ url_for('datos') }}" width="100%"/>
+          <div id="cuentaRegresiva" class="cuentaRegresiva"></div>
+          </div>
+      </div>
+  </div>
+  </body>

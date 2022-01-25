@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<body>
+  <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+  <div class="container">
+      <div class="row">
+        <div class="col-lg-8  offset-lg-2">
+            <div id="ganadores" class="ganadores">Ganadores
+            </div>
+            
+              <div id="logo" class="logo mt-5"><img src="../static/img-logo.jpg" width="100%"></div>
+            <div class="fondo-contenedor-video">  
+              	<img id="video-fondo" src="{{ url_for('videof') }}" width="100%">
+            </div>
+          </div>
+      </div>
+  </div>
+  </body>

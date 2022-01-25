@@ -12,6 +12,7 @@ ganador = False
 sorteoPath = "sorteo"
 ganadorPath = "ganadores"
 numeros_ganadores = []
+puestos_ganadores = []
 cantidad_fotos = 0
 miLista = os.listdir(sorteoPath)
 overlayList = []
@@ -26,6 +27,22 @@ start_time = time.time()
 
 pasar_foto = 0
 
+def switch(argument):
+    switcher = {
+        1: "Primer Puesto",
+        2: "Segundo Puesto",
+        3: "Tercer Puesto",
+        4: "Cuarto Puesto",
+        5: "Quinto Puesto",
+        6: "Sexto Puesto",
+        7: "Septimo Puesto",
+        8: "Octavo Puesto",
+        9: "Noveno Puesto",
+        10: "Decimo Puesto"
+    }
+
+    return switcher.get(argument)
+
 def Mbox(title, text, style):
     return ctypes.windll.user32.MessageBoxW(0, text, title, style)
 
@@ -39,13 +56,11 @@ while terminar and (len(numeros_ganadores) < cantidad_ganadores):
             numeros_ganadores.append(rnd)
             height, width, channels = img.shape
             cv2.putText(img, f'Puesto: {len(numeros_ganadores)}', (int(width*0.05), int(height*0.90)), cv2.FONT_HERSHEY_PLAIN,3, (255, 0, 0), 3)
-        if (len(numeros_ganadores) == 1):
-            etiquieta = "Primer Puesto"
-        elif (len(numeros_ganadores) == 2):
-            etiquieta = "Segundo Puesto"
-        else:
-            etiquieta = "Tercer Puesto"
-        cv2.imwrite(f'{ganadorPath}/{etiquieta}.jpg',img)
+        
+        etiqueta = switch(len(numeros_ganadores))
+        if(etiqueta not in puestos_ganadores):
+            puestos_ganadores.append(etiqueta)
+        cv2.imwrite(f'{ganadorPath}/{etiqueta}.jpg',img)
         tiempo_de_sorteo = 10
         
 
@@ -60,3 +75,9 @@ while terminar and (len(numeros_ganadores) < cantidad_ganadores):
     pasar_foto += 1
     cv2.imshow('sorteo', img)
     cv2.waitKey(1)
+
+
+for imagenes in puestos_ganadores:
+    cv2.imshow(str(imagenes), cv2.imread(f'{ganadorPath}/{imagenes}.jpg'))
+    
+cv2.waitKey(0)
