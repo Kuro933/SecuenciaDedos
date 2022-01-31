@@ -1,16 +1,71 @@
 <!DOCTYPE html>
+<html lang="es"></html>
 <body>
   <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
   <script src="https://unpkg.com/htmx.org@1.6.1"></script>
   <div class="container">
       <div class="row">
         <div class="col-lg-8  offset-lg-2">
+          <form action="login" name="login" method="post">
             <div id="nombre-container" class="nombre-container">
-                <input type="text" id="nombre" class="nombre" placeholder="nombre" /> </div>
-              <div id="logo" class="logo mt-5">Video en vivo :D</div>
-              <input type="text" id="datos" class="datos" src="{{ url_for('datos') }}" width="100%"/>
-          <div id="cuentaRegresiva" class="cuentaRegresiva"></div>
-          </div>
+              <label for="nombre">
+                Nombre
+                <input type="text" id="nombre" class="nombre" placeholder="nombre" name="nombre" /> </div>
+              </label>
+            </div>
+            <div id="telefono-container" class="telefono-container">
+              <label for="telefono">
+                Telefono
+                <input type="text" id="telefono" class="telefono" placeholder="ej: 2994123456" name="telefono" /> </div>
+              </label>
+            </div>
+            <div id="mano-container" class="mano-container">
+              <label for="mano">
+                Mano Hábil
+                <input type="text" id="mano" class="mano" placeholder="Zurda/o o Diestra/o" name="mano" /> </div>
+              </label>
+            </div>
+            <input id="login_submit" name="login_submit" type="submit" value="Enviar Datos"/>
+            <div id="logo" class="logo mt-5"></div>
+            </div>
+          </form>
       </div>
   </div>
   </body>
+<!-- 
+  <!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <link href="static/css/my-socnet-style.css" rel="stylesheet" type="text/css"/>
+        <title>
+            Log In - Mano Juego
+        </title>
+    </head>
+    <body>
+        <div id="container">
+         
+            <form action="login" method="post" name="login">
+                <label for="email">
+                        Email
+                 </label>
+				 <div class="inputs">
+                    <input id="email" name="email" placeholder="Email" size="80" type="text" value=""/>
+                </div>
+                <label for="passwd">
+                        Password
+                 </label>
+				 <div class="inputs">
+                    <input id="passwd" name="passwd" placeholder="Password" size="80" type="password" value=""/>
+                </div>
+                <label>
+                        <input id="remember_me" name="remember_me" type="checkbox" value="y"/>
+                        Remember Me
+                </label>
+                <div class="inputs">
+					<input id="login_submit" name="login_submit" type="submit" value="Log In"/>
+                </div>
+            </form>
+        </div>
+    </body>
+</html> -->

@@ -5,7 +5,7 @@ import wave
 import ctypes
 import random
 
-cantidad_ganadores = 3
+cantidad_ganadores = 6
 tiempo_de_sorteo = 10
 terminar = True
 ganador = False
@@ -55,7 +55,8 @@ while terminar and (len(numeros_ganadores) < cantidad_ganadores):
         if(rnd not in numeros_ganadores):
             numeros_ganadores.append(rnd)
             height, width, channels = img.shape
-            cv2.putText(img, f'Puesto: {len(numeros_ganadores)}', (int(width*0.05), int(height*0.90)), cv2.FONT_HERSHEY_PLAIN,3, (255, 0, 0), 3)
+            # cv2.rectangle(img, (int(width*0.13), int(height*0.10)), (int(width*0.51), int(height*0.20)), (178,105,3), cv2.FILLED)
+            # cv2.putText(img, f'Puesto: {len(numeros_ganadores)}', (int(width*0.17), int(height*0.17)), cv2.FONT_HERSHEY_PLAIN,3, (255, 0, 0), 3)
         
         etiqueta = switch(len(numeros_ganadores))
         if(etiqueta not in puestos_ganadores):
