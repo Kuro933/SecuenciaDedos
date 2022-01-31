@@ -4,10 +4,15 @@ import os
 import pyaudio
 import wave
 import ctypes
+import imutils
+import numpy as np
+import json
+import cgi
 import DetectarMano as htm
 import secuencia as s
 import argparse
 import datetime
+from multiprocessing import Process
 from flask import Response
 from flask import request
 from flask import Flask
@@ -21,6 +26,29 @@ from _tkinter import TclError
 
 app = Flask(__name__)
 
+
+
+def guardar_ganador(img_temp,img_temporal,width,height,nombre,numero_telefono,numero_participante):
+    # cv2.rectangle(img_temp, (int(width*0.05), int(height*0.70)), (int(width*0.5), int(height*0.95)), (255,255,255), cv2.FILLED)
+    print(numero_telefono)
+    numero_editado = ""
+    if numero_telefono != "":
+        s = (numero_telefono)
+        b = list(s)
+        largo = len(b)
+        b[largo - 1] = "X"
+        b[largo - 2] = "X" 
+        b[largo - 3] = "X"
+        b[largo - 4] = "X"
+        numero_editado = "".join(b)
+    cv2.rectangle(img_temp, (int(width*0.05), int(height*0.70)), (int(width*0.5), int(height*0.95)), (178,105,3), cv2.FILLED)
+    cv2.putText(img_temp, f'Nombre: {str(nombre)}', (int(width*0.1), int(height*0.80)), cv2.FONT_HERSHEY_DUPLEX,1, (255, 255, 255), 2)
+    cv2.putText(img_temp, f'Telefono: {str(numero_editado)}', (int(width*0.1), int(height*0.90)), cv2.FONT_HERSHEY_DUPLEX,1.3, (255, 255, 255), 2)
+    cv2.rectangle(img_temporal, (int(width*0.05), int(height*0.70)), (int(width*0.5), int(height*0.95)), (178,105,3), cv2.FILLED)
+    cv2.putText(img_temporal, f'Nombre: {str(nombre)}', (int(width*0.1), int(height*0.80)), cv2.FONT_HERSHEY_DUPLEX,1, (255, 255, 255), 2)
+    cv2.putText(img_temporal, f'Telefono: {str(numero_telefono)}', (int(width*0.1), int(height*0.90)), cv2.FONT_HERSHEY_DUPLEX,1.3, (255, 255, 255), 2)
+    cv2.imwrite(f'sorteo/{numero_participante}.jpg',img_temp)
+    cv2.imwrite(f'participantes/{numero_participante}.jpg',img_temporal)
 
 def Mbox(title, text, style):
     return ctypes.windll.user32.MessageBoxW(0, text, title, style)
@@ -44,6 +72,7 @@ def gen_frames():
     nombre = ""
     manoHabil = ""
     numero_telefono = ""
+
     termino = True
     inicio = True
     primerEjecucion = True
@@ -51,8 +80,9 @@ def gen_frames():
     secuencia = s.secuencia()
     numero_intento = 0
     mano = "derecha"
+    logo = cv2.imread("static/img-logo.png")
     print(secuencia)
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     wCam, hCam = 1366, 720
     cap.set(3, wCam)
     cap.set(4, hCam)
@@ -71,7 +101,6 @@ def gen_frames():
     derrota = True
     folderPath = "FingerImages"
     sorteito = "sorteo"
-    imagePath = r'C:\\Users\\gonzalezf\\Desktop\\git\\fiestaconfluencia\\SecuenciaDedos\\fingerDetected\\image'
     myList = os.listdir(folderPath)
     overlayList = []
     for imPath in myList:
@@ -127,12 +156,14 @@ def gen_frames():
         elapsed_time = time.time() - start_time
         success, img = cap.read()
         succ, img_temp = cap.read()
+        succes, img_temporal = cap.read()
         img = detector.findHands(img)
         lmList = detector.findPosition(img, draw=False)
-        x_secuencia = 125
-        y_secuencia = 40
+        width  = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+
+
         if elapsed_time > tiempo_de_juego and derrota == True:
-            bad_img = cv2.imread(f'{imagePath}/derrota.jpg')
             reinicio = True
             derrota = False
             tiempo_restante = tiempo_de_juego
@@ -179,16 +210,18 @@ def gen_frames():
                     k += 1
             else:
                 print("victoria")
-                ok_img = cv2.imread(f'{imagePath}/victoria.jpg')
                 Mensaje('Victoria', 'Victoria!!', 5)
-
-                cv2.putText(img_temp, f'Nombre: {str(nombre)}', (int(width*0.5), int(height*0.80)), cv2.FONT_HERSHEY_PLAIN,3, (255, 0, 0), 3)
-                cv2.putText(img_temp, f'Telefono: {str(numero_telefono)}', (int(width*0.5), int(height*0.90)), cv2.FONT_HERSHEY_PLAIN,3, (255, 0, 0), 3)
-                cv2.imwrite(f'{sorteito}/{numero_participante}.jpg',img_temp)
+                h_l, w_l, c = logo.shape
+                
+                img_temp[50:h_l+50 , 50:w_l+50] = logo
+                guardar_ganador(img_temp,img_temporal,width,height,nombre,numero_telefono,numero_participante)
+                print("termine de guardar")
                 numero_participante +=1
                 reinicio = True
                 inicio = True
+                # termino = False
                 numero_intento = 0
+                print("termine de asignar")
                 try:
                     participante_file = open("participantes.txt",'w')
                     print(numero_participante,file=participante_file)
@@ -196,6 +229,9 @@ def gen_frames():
                 except IOError:
                     print("File error")
                 
+                
+
+
             h, w, c = overlayList[totalFingers - 1].shape
             img[0:h, 0:w] = overlayList[totalFingers - 1]
     
@@ -203,14 +239,18 @@ def gen_frames():
         fps = 1 / (cTime - pTime)
         pTime = cTime
 
-        width  = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-        height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        x_secuencia = int(width*0.17)
+        y_secuencia = int(height*0.17)
+
+        cv2.rectangle(img, (int(width*0.13), int(height*0.10)), (int(width*0.51), int(height*0.20)), (178,105,3), cv2.FILLED)
 
         for num in secuencia:
-            cv2.putText(img, f'{str(num)}', (x_secuencia,y_secuencia), cv2.FONT_HERSHEY_PLAIN,3,(255,0,0),3)
+            cv2.putText(img, f'{str(num)}', (x_secuencia,y_secuencia), cv2.FONT_HERSHEY_DUPLEX,1.3,(255,255,255),2)
             x_secuencia += 40
 
-        cv2.putText(img, f'Tiempo restante: {int(tiempo_restante - elapsed_time)}', (int(width*0.05), int(height*0.90)), cv2.FONT_HERSHEY_PLAIN,3, (255, 0, 0), 3)    
+
+        cv2.rectangle(img, (int(width*0.04), int(height*0.85)), (int(width*0.45), int(height*0.95)), (178,105,3), cv2.FILLED)
+        cv2.putText(img, f'Tiempo restante: {int(tiempo_restante - elapsed_time)}', (int(width*0.08), int(height*0.92)), cv2.FONT_HERSHEY_DUPLEX,1.3, (255, 255, 255), 2)    
 
         if not success:
             break
@@ -218,35 +258,43 @@ def gen_frames():
             ret, buffer = cv2.imencode('.jpg', img)
             frame = buffer.tobytes()
             yield (b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')  # concat frame one by one and show result
+            
         # cv2.imshow("Image", img)
         # cv2.waitKey(1)
 
 
 
-@app.route("/")
+
+@app.route("/", methods=["GET", "POST"])
 def index():
-	return render_template("index.html")
+    form = cgi.FieldStorage()
+    
+    return render_template("index.html")
 
-@app.route("/messages")
+@app.route("/sorteo")
 def messages():
-    return "aja"
+    return render_template("sorteo.html")
 
-@app.route("/login")
+@app.route("/login", methods=["GET", "POST"])
 def login():
+    if request.method == 'POST':
+        missing = []
+        inputs = []
+        print(request.form)
+        fields = ['nombre', 'telefono', 'mano']
+        for field in fields:
+            value = request.form.get(field, None)
+            if value is None or value == '':
+                missing.append(field)
+            else:
+                inputs.append(value)
+                # print(value)
+        if not missing:
+            return render_template('index.html', inputs=inputs)
     return render_template("login.html")
 
-@app.route("/datos")
-def datos():
-    # print(document.getElementById("datos"))
-    return render_template("login.html", dato={"dedo":"see", "dado": "ajaa"})
 
-@app.route('/datos', methods=['POST'])
-def my_form_post():
-    text = request.form['text']
-    processed_text = text.upper()
-    return processed_text
-
-@app.route('/video_feed')
+@app.route('/video_feed', methods=["GET","POST"])
 def video_feed():
     return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
