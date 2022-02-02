@@ -38,7 +38,9 @@ def switch(argument):
         7: "Septimo Puesto",
         8: "Octavo Puesto",
         9: "Noveno Puesto",
-        10: "Decimo Puesto"
+        10: "Decimo Puesto",
+        11: "Undecimo Puesto",
+        12: "Doceavo Puesto"
     }
 
     return switcher.get(argument)
@@ -57,11 +59,11 @@ while terminar and (len(numeros_ganadores) < cantidad_ganadores):
             height, width, channels = img.shape
             # cv2.rectangle(img, (int(width*0.13), int(height*0.10)), (int(width*0.51), int(height*0.20)), (178,105,3), cv2.FILLED)
             # cv2.putText(img, f'Puesto: {len(numeros_ganadores)}', (int(width*0.17), int(height*0.17)), cv2.FONT_HERSHEY_PLAIN,3, (255, 0, 0), 3)
+            etiqueta = switch(len(numeros_ganadores)) + "-" + str(rnd)
         
-        etiqueta = switch(len(numeros_ganadores))
         if(etiqueta not in puestos_ganadores):
             puestos_ganadores.append(etiqueta)
-        cv2.imwrite(f'{ganadorPath}/{etiqueta}.jpg',img)
+            cv2.imwrite(f'{ganadorPath}/{etiqueta}.jpg',img)
         tiempo_de_sorteo = 10
         
 

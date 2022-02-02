@@ -28,25 +28,25 @@ app = Flask(__name__)
 
 
 
-def guardar_ganador(img_temp,img_temporal,width,height,nombre,numero_telefono,numero_participante):
-    # cv2.rectangle(img_temp, (int(width*0.05), int(height*0.70)), (int(width*0.5), int(height*0.95)), (255,255,255), cv2.FILLED)
-    print(numero_telefono)
-    numero_editado = ""
-    if numero_telefono != "":
-        s = (numero_telefono)
+def guardar_ganador(img_temp,img_temporal,width,height,nombre,user_insta,numero_participante):
+    # guardar 2 fotos al momento de la victoria del jugador, una con los datos completos y otra con datos editados para poder mostrar en el sorteo 
+    user_insta = "@" + user_insta
+    user_editado = "@"
+    user_longitud = len(user_insta)
+    mitad_long = user_longitud // 2
+    if user_insta != "@":
+        s = (user_insta)
         b = list(s)
         largo = len(b)
-        b[largo - 1] = "X"
-        b[largo - 2] = "X" 
-        b[largo - 3] = "X"
-        b[largo - 4] = "X"
-        numero_editado = "".join(b)
+        for x in range(mitad_long):
+            b[largo - (x+1)] = "X"
+        user_editado = "".join(b)
     cv2.rectangle(img_temp, (int(width*0.05), int(height*0.70)), (int(width*0.5), int(height*0.95)), (178,105,3), cv2.FILLED)
     cv2.putText(img_temp, f'Nombre: {str(nombre)}', (int(width*0.1), int(height*0.80)), cv2.FONT_HERSHEY_DUPLEX,1, (255, 255, 255), 2)
-    cv2.putText(img_temp, f'Telefono: {str(numero_editado)}', (int(width*0.1), int(height*0.90)), cv2.FONT_HERSHEY_DUPLEX,1.3, (255, 255, 255), 2)
+    cv2.putText(img_temp, f'IG: {str(user_editado)}', (int(width*0.1), int(height*0.90)), cv2.FONT_HERSHEY_DUPLEX,1, (255, 255, 255), 2)
     cv2.rectangle(img_temporal, (int(width*0.05), int(height*0.70)), (int(width*0.5), int(height*0.95)), (178,105,3), cv2.FILLED)
     cv2.putText(img_temporal, f'Nombre: {str(nombre)}', (int(width*0.1), int(height*0.80)), cv2.FONT_HERSHEY_DUPLEX,1, (255, 255, 255), 2)
-    cv2.putText(img_temporal, f'Telefono: {str(numero_telefono)}', (int(width*0.1), int(height*0.90)), cv2.FONT_HERSHEY_DUPLEX,1.3, (255, 255, 255), 2)
+    cv2.putText(img_temporal, f'IG: {str(user_insta)}', (int(width*0.1), int(height*0.90)), cv2.FONT_HERSHEY_DUPLEX,1, (255, 255, 255), 2)
     cv2.imwrite(f'sorteo/{numero_participante}.jpg',img_temp)
     cv2.imwrite(f'participantes/{numero_participante}.jpg',img_temporal)
 
@@ -71,16 +71,19 @@ def gen_frames():
     ws.withdraw()
     nombre = ""
     manoHabil = ""
-    numero_telefono = ""
-
+    user_insta = ""
+    h = "0"
+    w = "0"
     termino = True
     inicio = True
+    ganador = False
     primerEjecucion = True
     guardar = True
     secuencia = s.secuencia()
     numero_intento = 0
     mano = "derecha"
-    logo = cv2.imread("static/img-logo.png")
+    staticPath = "static"
+    logo = cv2.imread(f'{staticPath}/logito.png')
     print(secuencia)
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     wCam, hCam = 1366, 720
@@ -116,6 +119,8 @@ def gen_frames():
 
     while termino:
 
+        
+
         if primerEjecucion:
             preguntaParticipantes = Tk()
             preguntaParticipantes.withdraw()
@@ -134,12 +139,11 @@ def gen_frames():
 
         if inicio:
             nombre = simpledialog.askstring("Input", "Nombre",parent=ws)
-            if nombre is not None:
-                numero_telefono = simpledialog.askstring("Input", "Número de telefono",parent=ws)
-                # print("Tu nombre es: ", nombre)
-                # print("Tu telefono es: ", numero_telefono)
-                inicio = False
-                manoHabil = simpledialog.askstring("Input", "Mano Habil", parent=ws).lower()
+            user_insta = simpledialog.askstring("Input", "Usuario de Instagram",parent=ws)
+            localidad = simpledialog.askstring("Input", "Localidad", parent=ws).lower()
+            manoHabil = simpledialog.askstring("Input", "Mano Habil", parent=ws).lower()
+            inicio = False
+            ganador = False
 
         if numero_intento != 3:
             if reinicio:
@@ -147,6 +151,7 @@ def gen_frames():
                 start_time = time.time()
                 derrota = True
                 reinicio = False
+                ganador = False
                 k = 0
         else:
             Mensaje("Derrota", "Lo siento se terminaron los intentos", 5)
@@ -213,15 +218,21 @@ def gen_frames():
                 Mensaje('Victoria', 'Victoria!!', 5)
                 h_l, w_l, c = logo.shape
                 
-                img_temp[50:h_l+50 , 50:w_l+50] = logo
-                guardar_ganador(img_temp,img_temporal,width,height,nombre,numero_telefono,numero_participante)
-                print("termine de guardar")
+                img_temp[515:h_l+515 , 811:w_l+811] = logo
+                img_temporal[515:h_l+515 , 811:w_l+811] = logo
+                guardar_ganador(img_temp,img_temporal,width,height,nombre,user_insta,numero_participante)
                 numero_participante +=1
                 reinicio = True
+                ganador = True
                 inicio = True
                 # termino = False
+                if ganador:
+                    img_ganador = cv2.imread(f'{staticPath}/fondo-ganaste.jpg')
+                    img = img_ganador
+                    ret, buffer = cv2.imencode('.jpg', img)
+                    frame = buffer.tobytes()
+                    yield (b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
                 numero_intento = 0
-                print("termine de asignar")
                 try:
                     participante_file = open("participantes.txt",'w')
                     print(numero_participante,file=participante_file)
@@ -252,12 +263,13 @@ def gen_frames():
         cv2.rectangle(img, (int(width*0.04), int(height*0.85)), (int(width*0.45), int(height*0.95)), (178,105,3), cv2.FILLED)
         cv2.putText(img, f'Tiempo restante: {int(tiempo_restante - elapsed_time)}', (int(width*0.08), int(height*0.92)), cv2.FONT_HERSHEY_DUPLEX,1.3, (255, 255, 255), 2)    
 
+
         if not success:
             break
         else:
             ret, buffer = cv2.imencode('.jpg', img)
             frame = buffer.tobytes()
-            yield (b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')  # concat frame one by one and show result
+            yield (b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
             
         # cv2.imshow("Image", img)
         # cv2.waitKey(1)
