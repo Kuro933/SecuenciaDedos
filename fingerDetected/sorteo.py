@@ -2,15 +2,18 @@ import cv2
 import time
 import os
 import wave
+import time
 import ctypes
 import random
 
 cantidad_ganadores = 6
 tiempo_de_sorteo = 10
 terminar = True
+inicio = True
 ganador = False
 sorteoPath = "sorteo"
 ganadorPath = "ganadores"
+staticPath = "static"
 numeros_ganadores = []
 puestos_ganadores = []
 cantidad_fotos = 0
@@ -40,7 +43,8 @@ def switch(argument):
         9: "Noveno Puesto",
         10: "Decimo Puesto",
         11: "Undecimo Puesto",
-        12: "Doceavo Puesto"
+        12: "Doceavo Puesto",
+        13: "Treceavo Puesto"
     }
 
     return switcher.get(argument)
@@ -52,6 +56,17 @@ def Mbox(title, text, style):
 while terminar and (len(numeros_ganadores) < cantidad_ganadores):
     
     elapsed_time = time.time() - start_time
+
+    if inicio:
+        img_inicio = cv2.imread(f'{staticPath}/iniciar-sorteo.jpg')
+        bigger = cv2.resize(img_inicio,(1366, 720))
+         
+        cv2.imshow("sorteo",bigger)
+        cv2.waitKey(1)
+        # cv2.destroyAllWindows()
+        inicio = False
+        time.sleep(3)
+
 
     if ((int)(tiempo_de_sorteo - elapsed_time)) == 0:
         if(rnd not in numeros_ganadores):

@@ -1,0 +1,1 @@
+C:/Users/gonzalezf/Desktop/git/fiestaconfluencia/SecuenciaDedos/fingerDetected/venv/Scripts/python.exe contarDedosWeb.py -i localhost -o 9999

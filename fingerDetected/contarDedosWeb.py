@@ -1,3 +1,4 @@
+import shutil
 import cv2
 import time
 import os
@@ -26,10 +27,41 @@ from _tkinter import TclError
 
 app = Flask(__name__)
 
+# Borrará las fotos de las carpetas participantes, sorteo y ganadores, al comienzo del dia, cuando salga el cartel de reiniciar y se toque en "SI"
+def borrar_fotos(pathFolder):
+    folder = pathFolder
+    for filename in os.listdir(folder):
+        file_path = os.path.join(folder, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
 
+# Funcion que sirve para almacenar y modificar los datos dentro del json "data.json" la cual contiene datos de participantes en el dia, participantes totales y por localidad 
+def datos_json(reiniciar_participantes,localidad,propiedad, dato):
+    with open('data/data.json') as json_file:
+        data = json.load(json_file)
+        if localidad != "no":
+            try:
+                numero_participantes_localidad = data[localidad][0][propiedad]
+                data[localidad][0][propiedad] = numero_participantes_localidad + dato
+            except KeyError:
+                data[localidad].append({propiedad:dato})
+            except IndexError:
+                data[localidad].append({propiedad:dato})
+        elif reiniciar_participantes:
+            data[propiedad] = dato
+        else:
+            numero_participantes = data[propiedad]
+            data[propiedad] = numero_participantes + dato
+    with open('data/data.json', 'w') as outfile:
+        json.dump(data, outfile)
 
-def guardar_ganador(img_temp,img_temporal,width,height,nombre,user_insta,numero_participante):
-    # guardar 2 fotos al momento de la victoria del jugador, una con los datos completos y otra con datos editados para poder mostrar en el sorteo 
+def guardar_ganador(img_editada,img_datos,img_backup,width,height,nombre,user_insta,numero_participante,participantes_backup):
+    # guardar 3 fotos al momento de la victoria del jugador, una con los datos completos, otra con datos editados para poder mostrar en el sorteo y una tercera para backup y tener todas las fotos de los 5 dias 
     user_insta = "@" + user_insta
     user_editado = "@"
     user_longitud = len(user_insta)
@@ -41,14 +73,22 @@ def guardar_ganador(img_temp,img_temporal,width,height,nombre,user_insta,numero_
         for x in range(mitad_long):
             b[largo - (x+1)] = "X"
         user_editado = "".join(b)
-    cv2.rectangle(img_temp, (int(width*0.05), int(height*0.70)), (int(width*0.5), int(height*0.95)), (178,105,3), cv2.FILLED)
-    cv2.putText(img_temp, f'Nombre: {str(nombre)}', (int(width*0.1), int(height*0.80)), cv2.FONT_HERSHEY_DUPLEX,1, (255, 255, 255), 2)
-    cv2.putText(img_temp, f'IG: {str(user_editado)}', (int(width*0.1), int(height*0.90)), cv2.FONT_HERSHEY_DUPLEX,1, (255, 255, 255), 2)
-    cv2.rectangle(img_temporal, (int(width*0.05), int(height*0.70)), (int(width*0.5), int(height*0.95)), (178,105,3), cv2.FILLED)
-    cv2.putText(img_temporal, f'Nombre: {str(nombre)}', (int(width*0.1), int(height*0.80)), cv2.FONT_HERSHEY_DUPLEX,1, (255, 255, 255), 2)
-    cv2.putText(img_temporal, f'IG: {str(user_insta)}', (int(width*0.1), int(height*0.90)), cv2.FONT_HERSHEY_DUPLEX,1, (255, 255, 255), 2)
-    cv2.imwrite(f'sorteo/{numero_participante}.jpg',img_temp)
-    cv2.imwrite(f'participantes/{numero_participante}.jpg',img_temporal)
+    # Foto para sorteo
+    cv2.rectangle(img_editada, (int(width*0.05), int(height*0.70)), (int(width*0.5), int(height*0.95)), (178,105,3), cv2.FILLED)
+    cv2.putText(img_editada, f'Nombre: {str(nombre)}', (int(width*0.1), int(height*0.80)), cv2.FONT_HERSHEY_DUPLEX,1, (255, 255, 255), 2)
+    cv2.putText(img_editada, f'IG: {str(user_editado)}', (int(width*0.1), int(height*0.90)), cv2.FONT_HERSHEY_DUPLEX,1, (255, 255, 255), 2)
+    # Foto para saber a quien pertenece el ig
+    cv2.rectangle(img_datos, (int(width*0.05), int(height*0.70)), (int(width*0.5), int(height*0.95)), (178,105,3), cv2.FILLED)
+    cv2.putText(img_datos, f'Nombre: {str(nombre)}', (int(width*0.1), int(height*0.80)), cv2.FONT_HERSHEY_DUPLEX,1, (255, 255, 255), 2)
+    cv2.putText(img_datos, f'IG: {str(user_insta)}', (int(width*0.1), int(height*0.90)), cv2.FONT_HERSHEY_DUPLEX,1, (255, 255, 255), 2)
+    # Foto para Bakcup y tener todos los ganadores
+    cv2.rectangle(img_backup, (int(width*0.05), int(height*0.70)), (int(width*0.5), int(height*0.95)), (178,105,3), cv2.FILLED)
+    cv2.putText(img_backup, f'Nombre: {str(nombre)}', (int(width*0.1), int(height*0.80)), cv2.FONT_HERSHEY_DUPLEX,1, (255, 255, 255), 2)
+    cv2.putText(img_backup, f'IG: {str(user_insta)}', (int(width*0.1), int(height*0.90)), cv2.FONT_HERSHEY_DUPLEX,1, (255, 255, 255), 2)
+    # Se guardan las fotos en las carpetas correspondientes
+    cv2.imwrite(f'sorteo/{numero_participante}.jpg',img_editada)
+    cv2.imwrite(f'participantes/{numero_participante}.jpg',img_datos)
+    cv2.imwrite(f'backup/{participantes_backup}.jpg',img_backup)
 
 def Mbox(title, text, style):
     return ctypes.windll.user32.MessageBoxW(0, text, title, style)
@@ -83,21 +123,26 @@ def gen_frames():
     numero_intento = 0
     mano = "derecha"
     staticPath = "static"
-    logo = cv2.imread(f'{staticPath}/logito.png')
+    logo = cv2.imread(f'{staticPath}/img-logito.jpg')
     print(secuencia)
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     wCam, hCam = 1366, 720
     cap.set(3, wCam)
     cap.set(4, hCam)
     tiempo_de_juego = 10
-    try:
-        data = open("participantes.txt")
-        for dato in data:
-            numero_participante = int(dato)
+    with open('data/data.json') as json_file:
+        data = json.load(json_file)
+        participantes_totales = data["participantes_totales"]
+        participantes = data["participantes"]
+        participantes_ganadores = data["participantes_ganadores"]
+    # try:
+    #     data = open("participantes.txt")
+    #     for dato in data:
+    #         numero_participante = int(dato)
         
-        data.close()
-    except IOError:
-        print("no se pudo")
+    #     data.close()
+    # except IOError:
+    #     print("no se pudo")
 
     k=0 
     reinicio = False
@@ -126,26 +171,37 @@ def gen_frames():
             preguntaParticipantes.withdraw()
             respuesta = askyesno(title='Pregunta', message='Reiniciar numero de participantes?')
             if respuesta:
-                print("si")
-                numero_participante = 1
-                try:
-                    parti_file = open("participantes.txt",'w')
-                    print(numero_participante,file=parti_file)
-                    parti_file.close()
-                except IOError:
-                    print("File error")
+                asegurado = askyesno(title='Pregunta', message='Esta Seguro/a, este proceso solo debe utilizarse para reiniciar los participantes al comienzo del día')
+                if asegurado:
+                    print("si")
+                    # numero_participante = 1
+                    datos_json(True,"no","participantes", 1)
+                # try:
+                #     parti_file = open("participantes.txt",'w')
+                #     print(numero_participante,file=parti_file)
+                #     parti_file.close()
+                # except IOError:
+                #     print("File error")
                 
             primerEjecucion = False
+            borrar_fotos("ganadores")
+            # borrar_fotos("participantes")
+            # borrar_fotos("sorteo")
 
         if inicio:
             nombre = simpledialog.askstring("Input", "Nombre",parent=ws)
             user_insta = simpledialog.askstring("Input", "Usuario de Instagram",parent=ws)
-            localidad = simpledialog.askstring("Input", "Localidad", parent=ws).lower()
+            localidad = simpledialog.askstring("Input", "Localidad", parent=ws)
+            if localidad == "":
+                localidad = "Sin Localidad"
+            localidad = localidad.lower()
             manoHabil = simpledialog.askstring("Input", "Mano Habil", parent=ws).lower()
             inicio = False
             ganador = False
+            datos_json(False,"localidad",localidad,1)
 
-        if numero_intento != 3:
+
+        if numero_intento != 2:
             if reinicio:
                 secuencia = s.secuencia()
                 start_time = time.time()
@@ -156,12 +212,19 @@ def gen_frames():
         else:
             Mensaje("Derrota", "Lo siento se terminaron los intentos", 5)
             numero_intento=0
+            datos_json(False,"no","participantes_totales", 1)
             inicio = True
+            img_fondo = cv2.imread(f'{staticPath}/img-video.jpg')
+            img = img_fondo
+            ret, buffer = cv2.imencode('.jpg', img)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
         
         elapsed_time = time.time() - start_time
         success, img = cap.read()
         succ, img_temp = cap.read()
         succes, img_temporal = cap.read()
+        successfull, img_participante = cap.read()
         img = detector.findHands(img)
         lmList = detector.findPosition(img, draw=False)
         width  = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
@@ -173,7 +236,7 @@ def gen_frames():
             derrota = False
             tiempo_restante = tiempo_de_juego
             numero_intento += 1
-            Mensaje('Derrota', f'Quedan {3 - numero_intento} intentos, proximo en 5 segundos', 5)
+            Mensaje('Derrota', f'Quedan {2 - numero_intento} intentos, proximo en 5 segundos', 5)
 
             
         if len(lmList) != 0:
@@ -215,30 +278,41 @@ def gen_frames():
                     k += 1
             else:
                 print("victoria")
-                Mensaje('Victoria', 'Victoria!!', 5)
+                # Mensaje('Victoria', 'Victoria!!', 5)
                 h_l, w_l, c = logo.shape
-                
+                datos_json(False,"no","participantes", 1)
+                datos_json(False,"no","participantes_totales",1)
+                datos_json(False,"no","participantes_ganadores", 1)
                 img_temp[515:h_l+515 , 811:w_l+811] = logo
                 img_temporal[515:h_l+515 , 811:w_l+811] = logo
-                guardar_ganador(img_temp,img_temporal,width,height,nombre,user_insta,numero_participante)
-                numero_participante +=1
+                img_participante[515:h_l+515 , 811:w_l+811] = logo
+                guardar_ganador(img_temp,img_temporal,img_participante,width,height,nombre,user_insta,(participantes + 1),(participantes_ganadores + 1))
+                # numero_participante +=1
                 reinicio = True
                 ganador = True
                 inicio = True
+                numero_intento = 0
                 # termino = False
                 if ganador:
                     img_ganador = cv2.imread(f'{staticPath}/fondo-ganaste.jpg')
                     img = img_ganador
-                    ret, buffer = cv2.imencode('.jpg', img)
+                    ret, buffer = cv2.imencode('.jpg', img_ganador)
                     frame = buffer.tobytes()
                     yield (b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-                numero_intento = 0
-                try:
-                    participante_file = open("participantes.txt",'w')
-                    print(numero_participante,file=participante_file)
-                    participante_file.close()
-                except IOError:
-                    print("File error")
+                    # time.sleep(3)
+                
+                # Mensaje("Victoria", "Gano el juego!!!", 5)
+                img_fondo = cv2.imread(f'{staticPath}/img-video.jpg')
+                ret, buffer = cv2.imencode('.jpg', img_fondo)
+                frame = buffer.tobytes()
+                yield (b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+                time.sleep(5)
+                # try:
+                #     participante_file = open("participantes.txt",'w')
+                #     print(numero_participante,file=participante_file)
+                #     participante_file.close()
+                # except IOError:
+                #     print("File error")
                 
                 
 
